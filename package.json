@@ -9,7 +9,7 @@
       "url": "https://github.com/yi"
     },
     "bin": {
-      "distiller": "./bin/coffee-distiller.js"
+      "distill": "./bin/coffee-distiller.coffee"
     },
     "repository": {
       "type": "git",
@@ -35,6 +35,8 @@
       "commander": "latest",
       "underscore": "latest",
       "mkdirp": "latest",
+      "async": "latest",
+      "debug": "latest",
       "line-by-line": "latest",
       "walk": "latest"
     },
