@@ -6,5 +6,6 @@
 # Licensed under the MIT license.
 ##
 
-exports.awesome = ->
-  return 'awesome'
+console.log "[coffee-distiller::] message"
+
+

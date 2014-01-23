@@ -1,39 +1,44 @@
 {
   "name": "coffee-distiller",
-  "description": "obfuscating server side coffee-script code.",
-  "version": "0.1.0",
-  "homepage": "https://github.com/yi/node-coffee-distiller",
-  "author": {
-    "name": "yi",
-    "email": "yi2004@gmail.com",
-    "url": "https://github.com/yi"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/yi/node-coffee-distiller.git"
-  },
-  "bugs": {
-    "url": "https://github.com/yi/node-coffee-distiller/issues"
-  },
-  "licenses": [
+    "description": "obfuscating server side coffee-script code.",
+    "version": "0.1.0",
+    "homepage": "https://github.com/yi/node-coffee-distiller",
+    "author": {
+      "name": "yi",
+      "email": "yi2004@gmail.com",
+      "url": "https://github.com/yi"
+    },
+    "bin": {
+      "distiller": "./bin/coffee-distiller.js"
+    },
+    "repository": {
+      "type": "git",
+      "url": "git://github.com/yi/node-coffee-distiller.git"
+    },
+    "bugs": {
+      "url": "https://github.com/yi/node-coffee-distiller/issues"
+    },
+    "licenses": [
     {
       "type": "MIT",
       "url": "https://github.com/yi/node-coffee-distiller/blob/master/LICENSE-MIT"
     }
   ],
-  "main": "lib/coffee-distiller",
-  "engines": {
-    "node": ">= 0.8.0"
-  },
-  "scripts": {
-    "watch" : "coffee -o ./lib/ -cw ./src/"
-  },
-  "dependencies": {
-    "mkdirp": "latest",
-    "line-by-line": "latest",
-    "walk": "latest"
-  },
-  "devDependencies": {
-  },
-  "keywords": []
+    "main": "lib/coffee-distiller",
+    "engines": {
+      "node": ">= 0.8.0"
+    },
+    "scripts": {
+      "watch" : "coffee -o ./lib/ -cw ./src/"
+    },
+    "dependencies": {
+      "commander": "latest",
+      "underscore": "latest",
+      "mkdirp": "latest",
+      "line-by-line": "latest",
+      "walk": "latest"
+    },
+    "devDependencies": {
+    },
+    "keywords": []
 }
