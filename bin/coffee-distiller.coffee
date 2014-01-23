@@ -83,7 +83,7 @@ _ = require "underscore"
 child_process = require 'child_process'
 debug = require('debug')('distill')
 
-RE_REQUIRE = /require[\(\ ][\'"]([a-zA-Z0-9\.\_\/\-]+)[\'"]/g
+RE_REQUIRE = /^.*require[\(\ ][\'"]([a-zA-Z0-9\.\_\/\-]+)[\'"]/mg
 
 MODULES = {}
 
@@ -91,19 +91,19 @@ quitWithError = (msg)->
   console.error "ERROR: #{msg}"
   process.exit 1
 
-scanModules = (filename, isMain=false) ->
+scanModules = (filename, isMain=false, source) ->
   # 扫描文件中所有 require() 方法
 
-  debug "scanModules filename:#{filename}, isMain:#{isMain}"
+  debug "scanModules: #{filename} (required by: #{source or 'Root'})"
 
   if not fs.existsSync(filename) and path.basename(filename) isnt "index.coffee"
     # in case node require "/path/to/dir"
     oldFilename = filename
     filename = filename.replace(".coffee", "/index.coffee")
-    console.warn "WARNING: try #{filename} instead of #{oldFilename}"
+    console.warn "WARNING: missing coffee file at #{oldFilename}, try #{filename} (required by: #{source or 'Root'})"
 
   unless fs.existsSync(filename)
-    quitWithError "missing coffee file at #{filename}"
+    quitWithError "missing coffee file at #{filename} (required by: #{source or 'Root'})"
 
   code = fs.readFileSync filename,
     encoding : 'utf8'
@@ -113,9 +113,16 @@ scanModules = (filename, isMain=false) ->
     code : code
     isMain : isMain
 
-  requires = code.match(RE_REQUIRE) || []
+  requires = []
 
-  console.dir requires
+  code.replace RE_REQUIRE, ($0, $1)->
+    requires.push $1 if $1? and (!~$0.indexOf('#') and  $0.indexOf('#') < $0.indexOf('require'))
+    arguments[arguments.length - 1] = null
+    #console.dir arguments
+
+  #requires = code.match(RE_REQUIRE) || []
+
+  #console.dir requires
 
   for module in requires
 
@@ -128,7 +135,7 @@ scanModules = (filename, isMain=false) ->
     continue if MODULES[module ]
 
     # run recesively
-    scanModules module
+    scanModules module, false, filename
 
   return
 
@@ -165,6 +172,6 @@ unless fs.existsSync(p.main) and path.extname(p.main) is '.coffee'
 
 scanModules p.main
 
-debug "distillation complete!"
+debug "distillation complete! %j (%d)", _.keys(MODULES), _.keys(MODULES).length
 
 
