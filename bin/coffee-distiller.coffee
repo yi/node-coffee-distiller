@@ -115,6 +115,8 @@ scanModules = (filename, isMain=false) ->
 
   requires = code.match(RE_REQUIRE) || []
 
+  console.dir requires
+
   for module in requires
 
     # ignore module require
