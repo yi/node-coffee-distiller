@@ -2,3 +2,6 @@
 *.swp
 *.swo
 *.swq
+dist/
+.DS_Store
+

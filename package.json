@@ -35,7 +35,6 @@
       "commander": "latest",
       "underscore": "latest",
       "mkdirp": "latest",
-      "async": "latest",
       "debug": "latest",
       "line-by-line": "latest",
       "walk": "latest"

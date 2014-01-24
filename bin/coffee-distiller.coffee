@@ -78,12 +78,25 @@ exec = (id) ->
 
 path = require "path"
 fs = require "fs"
+mkdirp = require "mkdirp"
 _ = require "underscore"
 #async = require "async"
 child_process = require 'child_process'
 debug = require('debug')('distill')
 
+DEFINE_HEAD = "\ndefine '%s', (require, exports, module) ->\n"
+
+EXEC_TAIL = "\nexec '%s'"
+
 RE_REQUIRE = /^.*require[\(\ ][\'"]([a-zA-Z0-9\.\_\/\-]+)[\'"]/mg
+
+RE_HEAD = /^/mg
+
+OUTPUT_JS_FILE = ""
+
+OUTPUT_MINIFIED_JS_FILE = ""
+
+OUTPUT_COFFEE_FILE = ""
 
 MODULES = {}
 
@@ -91,10 +104,10 @@ quitWithError = (msg)->
   console.error "ERROR: #{msg}"
   process.exit 1
 
-scanModules = (filename, isMain=false, source) ->
+scan = (filename, isMain=false, source) ->
   # 扫描文件中所有 require() 方法
 
-  debug "scanModules: #{filename} (required by: #{source or 'Root'})"
+  debug "scan: #{filename} (required by: #{source or 'Root'})"
 
   if not fs.existsSync(filename) and path.basename(filename) isnt "index.coffee"
     # in case node require "/path/to/dir"
@@ -135,7 +148,7 @@ scanModules = (filename, isMain=false, source) ->
     continue if MODULES[module ]
 
     # run recesively
-    scanModules module, false, filename
+    scan module, false, filename
 
   return
 
@@ -144,34 +157,59 @@ resolve = (base, relative) ->
   return path.normalize(path.join(path.dirname(base), relative)) + ".coffee"
 
 # 合并成一个文件
-#def merge_modules(filename, modules={}):
-    #file = open(filename, 'w')
-    #file.write(AMD_TMPL + '\n')
-    #main_id = None
-    #for id, module in modules.items():
-        #id, code, is_main = module
-        ## 加入 AMD define 方法
-        #id = id.replace('.coffee', '')
-        #head = DEFINE_HEAD % id
-        ## 增加缩进
-        #head += RE_HEAD.sub('  ', code)
-        #head += '\n'
-        #file.write(head)
-        #if is_main:
-            #main_id = id
-    #assert main_id
-    ## 加入执行命令
-    #file.write(EXEC_TAIL % main_id)
-    #file.close()
-    #return filename
+merge = ->
+  debug "do merge"
 
-p.main = path.resolve __dirname, (p.main || '')
+  result = "#{AMD_TMPL}\n\n"
+
+  for id, module of MODULES
+    #console.dir module
+    id = id.replace('.coffee', '')
+    result  += DEFINE_HEAD.replace('%s', id)
+    result  += module.code.replace(RE_HEAD, '  ')
+    result  += " \n"
+
+  result  += EXEC_TAIL.replace('%s', p.main.replace('.coffee', ''))
+  fs.writeFileSync(OUTPUT_COFFEE_FILE, result)
+
+## validate input parameters
+unless p.main?
+  quitWithError "missing main entrance coffee file (-m), use -h for help."
+
+p.main = path.resolve process.cwd(), (p.main || '')
 
 unless fs.existsSync(p.main) and path.extname(p.main) is '.coffee'
-  quitWithError "bad main entrance file: #{p.main}, #{path.extname(p.main)}"
+  quitWithError "bad main entrance file: #{p.main}, #{path.extname(p.main)}."
 
-scanModules p.main
+p.output = path.resolve(process.cwd(), p.output || '')
+outputBasename = if path.extname(p.output) is ".js" then path.basename(p.output, '.js') else path.basename(p.main, 'coffee')
+OUTPUT_JS_FILE = path.join path.dirname(p.output), "#{outputBasename}.js"
+OUTPUT_MINIFIED_JS_FILE = path.join path.dirname(p.output), "#{outputBasename}.min.js"
+OUTPUT_COFFEE_FILE = path.join path.dirname(p.output), "#{outputBasename}.coffee"
+mkdirp.sync(path.dirname(OUTPUT_JS_FILE))
 
-debug "distillation complete! %j (%d)", _.keys(MODULES), _.keys(MODULES).length
+## scan modules
+console.log "[coffee-distiller] scanning..."
+scan(p.main)
+
+console.log "[coffee-distiller] merging #{_.keys(MODULES).length} coffee files..."
+merge()
+
+console.log "[coffee-distiller] compile coffer to js..."
+child_process.exec "coffee -c #{OUTPUT_COFFEE_FILE}", (err, stdout, stderr)->
+  if err?
+    quitWithError "coffee compiler failed. error:#{err}, stdout:#{stdout}, stderr:#{stderr}"
+    return
+
+  console.log "[coffee-distiller] merging complete! #{path.relative(process.cwd(), OUTPUT_JS_FILE)}"
+
+  console.log "[coffee-distiller] minifying js..."
+  child_process.exec "java -jar #{__dirname}/compiler.jar --js #{OUTPUT_JS_FILE} --js_output_file #{OUTPUT_MINIFIED_JS_FILE} --compilation_level SIMPLE_OPTIMIZATIONS ", (err, stdout, stderr)->
+    if err?
+      quitWithError "minify js failed. error:#{err}, stdout:#{stdout}, stderr:#{stderr}"
+      return
+
+    console.log "[coffee-distiller] minifying complete! #{path.relative(process.cwd(), OUTPUT_MINIFIED_JS_FILE)}"
+
 
 
