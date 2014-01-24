@@ -13,7 +13,8 @@ p = require "commander"
 ## cli parameters
 p.version(pkg.version)
   .option('-o, --output [VALUE]', 'output directory')
-  .option('-m, --main [VALUE]', 'main entrance coffee file')
+  .option('-i, --input [VALUE]', 'path to main entrance coffee file')
+  .option('-m, --minify [type]', 'minify merged javascript file. [closure] use Closure Compiler, [uglify] use uglify-js2, [none] do not minify', 'closure')
   .parse(process.argv)
 
 # {{{ AMD 模版
@@ -158,7 +159,6 @@ resolve = (base, relative) ->
 
 # 合并成一个文件
 merge = ->
-  debug "do merge"
 
   result = "#{AMD_TMPL}\n\n"
 
@@ -169,39 +169,44 @@ merge = ->
     result  += module.code.replace(RE_HEAD, '  ')
     result  += " \n"
 
-  result  += EXEC_TAIL.replace('%s', p.main.replace('.coffee', ''))
+  result  += EXEC_TAIL.replace('%s', p.input.replace('.coffee', ''))
   fs.writeFileSync(OUTPUT_COFFEE_FILE, result)
 
 ## validate input parameters
-unless p.main?
-  quitWithError "missing main entrance coffee file (-m), use -h for help."
+unless p.input?
+  quitWithError "missing main entrance coffee file (-i), use -h for help."
 
-p.main = path.resolve process.cwd(), (p.main || '')
+p.input = path.resolve process.cwd(), (p.input || '')
 
-unless fs.existsSync(p.main) and path.extname(p.main) is '.coffee'
-  quitWithError "bad main entrance file: #{p.main}, #{path.extname(p.main)}."
+unless fs.existsSync(p.input) and path.extname(p.input) is '.coffee'
+  quitWithError "bad main entrance file: #{p.input}, #{path.extname(p.input)}."
 
 p.output = path.resolve(process.cwd(), p.output || '')
-outputBasename = if path.extname(p.output) is ".js" then path.basename(p.output, '.js') else path.basename(p.main, 'coffee')
+outputBasename = if path.extname(p.output) is ".js" then path.basename(p.output, '.js') else path.basename(p.input, 'coffee')
 OUTPUT_JS_FILE = path.join path.dirname(p.output), "#{outputBasename}.js"
 OUTPUT_MINIFIED_JS_FILE = path.join path.dirname(p.output), "#{outputBasename}.min.js"
 OUTPUT_COFFEE_FILE = path.join path.dirname(p.output), "#{outputBasename}.coffee"
 mkdirp.sync(path.dirname(OUTPUT_JS_FILE))
 
+## describe the job
+console.log "[coffee-distiller] merge from #{path.relative(process.cwd(), p.input)} to #{path.relative(process.cwd(),OUTPUT_JS_FILE)}, minify via #{p.minify}"
+
 ## scan modules
 console.log "[coffee-distiller] scanning..."
-scan(p.main)
+scan(p.input)
 
 console.log "[coffee-distiller] merging #{_.keys(MODULES).length} coffee files..."
 merge()
 
-console.log "[coffee-distiller] compile coffer to js..."
+console.log "[coffee-distiller] compile coffee to js..."
 child_process.exec "coffee -c #{OUTPUT_COFFEE_FILE}", (err, stdout, stderr)->
   if err?
     quitWithError "coffee compiler failed. error:#{err}, stdout:#{stdout}, stderr:#{stderr}"
     return
 
   console.log "[coffee-distiller] merging complete! #{path.relative(process.cwd(), OUTPUT_JS_FILE)}"
+
+  process.exit() if p.minify is "none"
 
   console.log "[coffee-distiller] minifying js..."
   child_process.exec "java -jar #{__dirname}/compiler.jar --js #{OUTPUT_JS_FILE} --js_output_file #{OUTPUT_MINIFIED_JS_FILE} --compilation_level SIMPLE_OPTIMIZATIONS ", (err, stdout, stderr)->

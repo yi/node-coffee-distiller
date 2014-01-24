@@ -1,6 +1,6 @@
 {
   "name": "coffee-distiller",
-    "description": "obfuscating server side coffee-script code.",
+    "description": "merge and minify server side coffee-script code.",
     "version": "0.1.0",
     "homepage": "https://github.com/yi/node-coffee-distiller",
     "author": {
@@ -28,18 +28,15 @@
     "engines": {
       "node": ">= 0.8.0"
     },
-    "scripts": {
-      "watch" : "coffee -o ./lib/ -cw ./src/"
-    },
     "dependencies": {
       "commander": "latest",
       "underscore": "latest",
       "mkdirp": "latest",
       "debug": "latest",
-      "line-by-line": "latest",
+      "uglify-js2": "latest",
       "walk": "latest"
     },
     "devDependencies": {
     },
-    "keywords": []
+    "keywords": ["uglify","build","minify","coffeescript","compiler" ]
 }
