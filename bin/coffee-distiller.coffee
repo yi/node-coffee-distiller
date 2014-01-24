@@ -99,6 +99,8 @@ OUTPUT_MINIFIED_JS_FILE = ""
 
 OUTPUT_COFFEE_FILE = ""
 
+PATH_TO_UGLIFY = path.resolve(__dirname, "../node_modules/uglify-js2/bin/uglifyjs2")
+
 MODULES = {}
 
 quitWithError = (msg)->
@@ -206,10 +208,15 @@ child_process.exec "coffee -c #{OUTPUT_COFFEE_FILE}", (err, stdout, stderr)->
 
   console.log "[coffee-distiller] merging complete! #{path.relative(process.cwd(), OUTPUT_JS_FILE)}"
 
-  process.exit() if p.minify is "none"
+  switch p.minify
+    when "none" then process.exit()
+    when "uglify" then command = "#{PATH_TO_UGLIFY} #{OUTPUT_JS_FILE} -o #{OUTPUT_MINIFIED_JS_FILE}"
+    else command = "java -jar #{__dirname}/compiler.jar --js #{OUTPUT_JS_FILE} --js_output_file #{OUTPUT_MINIFIED_JS_FILE} --compilation_level SIMPLE_OPTIMIZATIONS "
 
   console.log "[coffee-distiller] minifying js..."
-  child_process.exec "java -jar #{__dirname}/compiler.jar --js #{OUTPUT_JS_FILE} --js_output_file #{OUTPUT_MINIFIED_JS_FILE} --compilation_level SIMPLE_OPTIMIZATIONS ", (err, stdout, stderr)->
+
+  #child_process.exec "java -jar #{__dirname}/compiler.jar --js #{OUTPUT_JS_FILE} --js_output_file #{OUTPUT_MINIFIED_JS_FILE} --compilation_level SIMPLE_OPTIMIZATIONS ", (err, stdout, stderr)->
+  child_process.exec command, (err, stdout, stderr)->
     if err?
       quitWithError "minify js failed. error:#{err}, stdout:#{stdout}, stderr:#{stderr}"
       return
