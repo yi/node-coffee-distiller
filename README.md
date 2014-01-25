@@ -17,7 +17,7 @@ This tool introduces a fake CJS module wrapper and merges coffee-script files, a
 ## Install
 
 ```bash
-sudo npm install coffee-script coffee-distiller  -g
+npm install coffee-script coffee-distiller  -g
 ```
 
 ## Usage
@@ -25,7 +25,7 @@ sudo npm install coffee-script coffee-distiller  -g
 Use in command line
 
 ```bash
-coffee-distiller -i path/to/app.coffe -o dist/app.js
+distill -i path/to/app.coffe -o dist/app.js
 
 # this will generate 3 files in ./dist/ directory:
 # - app.coffee : a merged coffee file
