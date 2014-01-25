@@ -1,6 +1,6 @@
 {
   "name": "coffee-distiller",
-    "description": "merge and minify server side coffee-script code.",
+    "description": "Merge and minify server side coffee-script files with fake CJS wrappers. This tool is useful for developers who want to distribute a SERVER SIDE coffee-script app in the form of single javascript file.",
     "version": "0.1.0",
     "homepage": "https://github.com/yi/node-coffee-distiller",
     "author": {
@@ -21,10 +21,10 @@
     "licenses": [
     {
       "type": "MIT",
-      "url": "https://github.com/yi/node-coffee-distiller/blob/master/LICENSE-MIT"
+      "url": "https://github.com/yi/node-coffee-distiller/blob/master/LICENSE"
     }
   ],
-    "main": "lib/coffee-distiller",
+    "main": "./bin/coffee-distiller.coffee",
     "engines": {
       "node": ">= 0.8.0"
     },
