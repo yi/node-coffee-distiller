@@ -20,31 +20,31 @@ p.version(pkg.version)
 # {{{ AMD 模版
 AMD_TMPL = '''
 ## Module dependencies
-nativePath = require "path"
+__nativePath = require "path"
 # NativeModule = require "native_module"
 
 # A hack to fix requiring external module issue
-nativeRequire = require
-m = require "module"
-hackRequire = (id) -> m._load id, module
+__nativeRequire = require
+__module = require "module"
+__hackRequire = (id) -> __module._load id, module
 # A hack to make cluster work
 # cluster = NativeModule.require 'cluster'
-nativeCluster = require 'cluster'
-nativeCluster.settings.exec = "_third_party_main"
+__nativeCluster = require 'cluster'
+__nativeCluster.settings.exec = "_third_party_main"
 if process.env.NODE_UNIQUE_ID
-  nativeCluster._setupWorker()
+  __nativeCluster._setupWorker()
   # Make sure it's not accidentally inherited by child processes.
   delete process.env.NODE_UNIQUE_ID
 
 # A cache object contains all modules with their ids
-_MODULES_BY_ID = {}
+__MODULES_BY_ID = {}
 
 # Internal module class holding module id, dependencies and exports
 class Module
 
   constructor: (@id, @factory) ->
     # Append module to cache
-    _MODULES_BY_ID[@id] = this
+    __MODULES_BY_ID[@id] = this
 
   # Initialize exports
   initialize: ->
@@ -54,25 +54,25 @@ class Module
       # If this is a relative path
       if id.charAt(0) == "."
         # Resolve id to absolute path
-        id = nativePath.normalize(nativePath.join(nativePath.dirname(@id), id))
-        mod = _MODULES_BY_ID[id]
+        id = __nativePath.normalize(__nativePath.join(__nativePath.dirname(@id), id))
+        mod = __MODULES_BY_ID[id]
         throw new Error("module #{id} is not found") unless mod
         return mod.exports if mod.exports?
         mod.initialize()
       else
-        hackRequire id
+        __hackRequire id
     @factory.call this, @require, @exports, this
     @exports
 
 # Define a module.
 define = (id, factory) ->
   throw new Error("id must be specifed") unless id
-  throw new Error("module #{id} is already defined") if id of _MODULES_BY_ID
+  throw new Error("module #{id} is already defined") if id of __MODULES_BY_ID
   new Module(id, factory)
 
 # Start a module
 exec = (id) ->
-  module = _MODULES_BY_ID[id]
+  module = __MODULES_BY_ID[id]
   module.initialize()
 '''
 # }}}
