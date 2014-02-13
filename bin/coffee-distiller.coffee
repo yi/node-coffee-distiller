@@ -13,6 +13,7 @@ p = require "commander"
 ## cli parameters
 p.version(pkg.version)
   .option('-o, --output [VALUE]', 'output directory')
+  .option('-n, --onlyKeepMinifiedFile', 'only keep minified file')
   .option('-i, --input [VALUE]', 'path to main entrance coffee file')
   .option('-m, --minify [type]', 'minify merged javascript file. [closure] use Closure Compiler, [uglify] use uglify-js2, [none] do not minify', 'closure')
   .parse(process.argv)
@@ -223,5 +224,9 @@ child_process.exec "coffee -c #{OUTPUT_COFFEE_FILE}", (err, stdout, stderr)->
 
     console.log "[coffee-distiller] minifying complete! #{path.relative(process.cwd(), OUTPUT_MINIFIED_JS_FILE)}"
 
+    if p.onlyKeepMinifiedFile
+      fs.unlinkSync OUTPUT_JS_FILE
+      fs.unlinkSync OUTPUT_COFFEE_FILE
+      console.log "[coffee-distiller] clean output files exept minified one"
 
 
