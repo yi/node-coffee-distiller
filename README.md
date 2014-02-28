@@ -40,6 +40,7 @@ distill -i path/to/app.coffe -o dist/app.js
 * -o, --output [VALUE]  output directory
 * -i, --input [VALUE]   path to main entrance coffee file
 * -m, --minify [type]   minify merged javascript file. [closure(default)] use Closure Compiler, [uglify] use uglify-js2, [none] do not minify js code
+* -n, --onlyKeepMinifiedFile  only keep minified js output file
 
 
 

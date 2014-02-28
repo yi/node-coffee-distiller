@@ -138,7 +138,6 @@ scan = (filename, isMain=false, source) ->
     #console.dir arguments
 
   #requires = code.match(RE_REQUIRE) || []
-
   #console.dir requires
 
   for module in requires
@@ -185,10 +184,18 @@ unless fs.existsSync(p.input) and path.extname(p.input) is '.coffee'
   quitWithError "bad main entrance file: #{p.input}, #{path.extname(p.input)}."
 
 p.output = path.resolve(process.cwd(), p.output || '')
-outputBasename = if path.extname(p.output) is ".js" then path.basename(p.output, '.js') else path.basename(p.input, 'coffee')
-OUTPUT_JS_FILE = path.join path.dirname(p.output), "#{outputBasename}.js"
-OUTPUT_MINIFIED_JS_FILE = path.join path.dirname(p.output), "#{outputBasename}.min.js"
-OUTPUT_COFFEE_FILE = path.join path.dirname(p.output), "#{outputBasename}.coffee"
+
+if path.extname(p.output)
+  outputBasename = path.basename(p.output, path.extname(p.output))
+  OUTPUT_JS_FILE = path.join path.dirname(p.output), "#{outputBasename}.js"
+  OUTPUT_MINIFIED_JS_FILE = path.join path.dirname(p.output), "#{outputBasename}.min.js"
+  OUTPUT_COFFEE_FILE = path.join path.dirname(p.output), "#{outputBasename}.coffee"
+else
+  outputBasename = path.basename(p.input, '.coffee')
+  OUTPUT_JS_FILE = path.join p.output, "#{outputBasename}.js"
+  OUTPUT_MINIFIED_JS_FILE = path.join p.output, "#{outputBasename}.min.js"
+  OUTPUT_COFFEE_FILE = path.join p.output, "#{outputBasename}.coffee"
+
 mkdirp.sync(path.dirname(OUTPUT_JS_FILE))
 
 ## describe the job
